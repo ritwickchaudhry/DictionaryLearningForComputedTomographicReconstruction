@@ -2,7 +2,7 @@ function b = AtRadon5(b_data,idx,dim,patchSize, numAngles,lambda2)
 %% Split the Column into the components
 H = dim(1);
 W = dim(2);
-numPatches = (H - (patchSize-1))*(W - (patchSize-1));
+numPatches = ((H*W)/(patchSize*patchSize));
 s1 = size(b_data,1)-(numPatches*(patchSize^2));
 s2 = size(b_data,1);
 
@@ -35,6 +35,8 @@ numPatches = ((H*W)/(patchSize*patchSize));
 
 for j=1:(H/patchSize)
     for k=1:(W/patchSize)
+	dimH = (j-1)*patchSize + 1;
+	dimW = (k-1)*patchSize + 1;
         patchStart = (counter*patchSize*patchSize) + 1;
         patchEnd = patchStart + (patchSize*patchSize) - 1;
         patch = Y2(patchStart:patchEnd);

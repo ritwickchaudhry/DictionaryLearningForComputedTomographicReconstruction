@@ -34,8 +34,10 @@ id = 1:40;
 dim = size(input);
 
 lambda1 = 0.1;
-lambda2List = [0.1 0.2]; 
-lambda3List = [0.1 0.2];
+lambda2List = [0.1]; 
+lambda3List = [0.1];
+%lambda2List = [0.1 0.2]; 
+%lambda3List = [0.1 0.2];
 rel_tol = 0.01; % relative target duality gap
 angleSet = [5 10 40];
 numCycles = 5;  
@@ -159,12 +161,15 @@ for ang = 1:length(angleSet)
                 output = idct2(output);          
 
             end
-
-                in = input;
+		in = input;
+		out = output;
+                Nmr = (out-in).^2;
+    %                 Dnr = in-mean2(in).^2;
+                mseVal(ang,lambda2,lambda3) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
+ 
                 in = in - minimum;
                 in = in./maximum;
 
-                out = output;
                 out = out - minimum;
                 out = out./maximum;
 
@@ -172,9 +177,6 @@ for ang = 1:length(angleSet)
                 outfileName = sprintf('%s/%d_angles_PatchBasedPCA_lambda2_%d_lambda3_%d',folderName,numAngles,la2,la3); 
                 imwrite(out,outfileName,'png');
 
-                Nmr = (out-in).^2;
-    %                 Dnr = in-mean2(in).^2;
-                mseVal(ang,lambda2,lambda3) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
     %                 mseVal(ang,lamb) = sum(Nmr(:))/sum(Dnr(:)); % computing relative MSE value.
           %----------------------------------------------      
         end

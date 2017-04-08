@@ -2,10 +2,10 @@ clear all;
 
 templateDirectory = './templatesBrain/';
 dirInfo = dir(templateDirectory);
-% numTemplates = length(dirInfo) - 2;
-numTemplates = 10;
-patchSize = 8;
-numDims = 64;
+ numTemplates = length(dirInfo) - 2;
+%numTemplates = 10;
+patchSize = 9;
+numDims = patchSize*patchSize;
 
 % Get the image size
 name = sprintf('%s%s',templateDirectory, dirInfo(3).name);
