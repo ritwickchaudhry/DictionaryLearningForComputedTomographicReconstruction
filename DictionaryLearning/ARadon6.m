@@ -1,3 +1,3 @@
-function b = ARadon6(alphas, dictionary)
-%% D*Alpha
-b = dictioanry*alphas;
+function b = ARadon6(alphas, eigenVecs)
+%% EigenVecs*Alpha = Patch
+b = eigenVecs*alphas;

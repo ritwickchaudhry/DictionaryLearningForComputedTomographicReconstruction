@@ -3,14 +3,16 @@ close all;
 
 % Load the Eigen Space information learned from the templates.
 
-es = load('EigenSpaceBrain.mat');
-eigenVecs = es.eigenVecs;
-eigenVals = es.eigenVals;
-numDim = length(eigenVals);
-meanTemplate = es.meanTemplate;
-minimum = es.minimum;
-maximum = es.maximum;
-folderName = 'testWithAlphasBrain';
+parameters = load('Dictionary.mat');
+dictionary = parameters.dict;
+numDims = size(dictionary,2);
+%meanTemplate = es.meanPatch;
+patchSize = parameters.patchSize;
+minimum = dict.minimum;
+maximum = dict.maximum;
+% minimum = es.minimum;
+% maximum = es.maximum;
+folderName = 'testDictionaryBasedPrior';
 mkdir(folderName);
 
 % Now read a new test image and find its weights
@@ -20,7 +22,7 @@ testIm = double(imread('testBrain.png'));
 % testIm = testIm(13:180,1:168);
 temp = testIm;
 testIm = testIm(:);
-alphaTest = eigenVecs'*(testIm-meanTemplate);
+% alphaTest = eigenVecs'*(testIm-meanTemplate);
  
 %-----The actual experiment starts...-----------------------------------------------------------
 
@@ -30,45 +32,54 @@ load('dir_vectors_3668.mat');
 id = 1:40;
 dim = size(input);
 
-lambda2List = [0.1 0.2]; 
-lambda3List = [0.1 0.2];
+lambda1 = 0.1;
+lambda2List = [0.1]; 
+lambda3List = [0.1];
+%lambda2List = [0.1 0.2]; 
+%lambda3List = [0.1 0.2];
 rel_tol = 0.01; % relative target duality gap
 angleSet = [5 10 40];
-numCycles = 4;  
+numCycles = 5;  
 
-mseVal_Dictionary = zeros(length(angleSet),length(lambda));
-mseValCropped_Dictioanry = zeros(length(angleSet),length(lambda));
+mseVal = zeros(length(angleSet),length(lambda2List),length(lambda3List));
+% mseValCropped = zeros(length(angleSet),length(lambda2List),length(lambda3List));
 
 %%
-for lambda2 = 1:length(lambda2List)
-    tic;
-    for lambda3 = 1:length(lambda3List)
+for ang = 1:length(angleSet)
+    for lambda2 = 1:length(lambda2List)
+        tic;
+        for lambda3 = 1:length(lambda3List)
+            numAngles = angleSet(ang);
+            idx = id(1:numAngles);
 
-        numAngles = angleSet(ang);
-        idx = id(1:numAngles);
-        
-        CompleteAngleSet  = mtt(idx,:);
-        idx1 = (atan(CompleteAngleSet(:,2)./CompleteAngleSet(:,1)))*180/pi;
+            CompleteAngleSet  = mtt(idx,:);
+            idx1 = (atan(CompleteAngleSet(:,2)./CompleteAngleSet(:,1)))*180/pi;
 
-        x = dct2(input);
-        x = reshape(x, [dim(1)*dim(2) 1]);
-%         DCT Coefficients of the image 
-        xArray = x;
+            x = dct2(input);
+            x = reshape(x, [dim(1)*dim(2) 1]);
+    %         DCT Coefficients of the image 
+            xArray = x;
 
-%%         Dictionary Learning Part Starts  
+    %%         Dictionary Learning Part Starts  
             % assume initial set of alphas to be all zeros
+             la2 = lambda2List(lambda2);
+             la3 = lambda3List(lambda3);
 
-            Afun = @(z) ARadon1(z,idx1,dim,numAngles,lambda1(lamb));
-            Atfun = @(z) AtRadon1(z,idx1,dim,numAngles,lambda1(lamb));
+            Afun = @(z) ARadon5(z,idx1,dim,patchSize,numAngles,la2);
+            Atfun = @(z) AtRadon5(z,idx1,dim,patchSize,numAngles,la2);
 
-            Afun2 = @(z) ARadon3(z,eigenVecs);
-            Atfun2 = @(z) AtRadon3(z,eigenVecs);
+            Afun2 = @(z) ARadon6(z,eigenVecs);
+            Atfun2 = @(z) AtRadon6(z,eigenVecs);
+
+            H = dim(1);
+            W = dim(2);
+            numPatches = ((H*W)/(patchSize*patchSize))
             
-            alphas = cell(1,numCycles);
-
             for numIter = 1:numCycles         
+                disp "---------------------------------------";
+                numIter
+                disp "---------------------------------------";
                 if numIter==1
-
                     startPt = 1;
                     endPt = dim(1)*dim(2);
                     X = xArray(startPt:endPt);
@@ -79,11 +90,15 @@ for lambda2 = 1:length(lambda2List)
                     angles = idx1(startPt:endPt);
                     radProj = radon(X,angles);    
                     y = reshape(radProj,[size(radProj,1)*size(radProj,2) 1]); 
-%                     Actual Measurements - y
-%                     Zero Alphas (That's why just mean template)
-                    priorIm = meanTemplate(:);
-                    temp = lambda1(lamb)*priorIm;  % including the prior term
-                    y = cat(1,y,temp);
+    %                     Actual Measurements - y
+    %                     Zero Alphas For all patches (That's why just mean template)                
+%                     disp Here1
+                    vec = (la2/numPatches)*meanTemplate;
+                    vec = repmat(vec,numPatches,1);
+%                     size(vec)
+                    y = cat(1,y,vec);
+                    size(y)
+%                     disp Here2
 
                 else
 
@@ -92,6 +107,7 @@ for lambda2 = 1:length(lambda2List)
                     X = xArray(startPt:endPt);
                     X = reshape(X,[dim(1) dim(2)]);
                     X = idct2(X);
+                    
                     startPt = 1;
                     endPt = numAngles;
                     angles = idx1(startPt:endPt);
@@ -99,73 +115,75 @@ for lambda2 = 1:length(lambda2List)
                     y = reshape(radProj,[size(radProj,1)*size(radProj,2) 1]); 
 
                     result = output;
-                    result  = result(:);
+%                     result  = result(:);
 
-%                      Code to find the next set of optimum alphas       
-                    alphas_y = (result - meanTemplate);
-                    
-%                     Hard Coded as of now
-                    lambda3 = 0.1
-                    
-                    m = size(alphas_y,1);
-                    n = size(eigenVecs,2);
-                    [x_hat,status,history]=l1_ls_modified(Afun2,Atfun2,m,n,alphas_y,lambda3,rel_tol);                    
-                    alphas{numIter} =  x_hat(:);
-                    
-                    priorIm = meanTemplate + eigenVecs*alphas{numIter};
-                    temp = lambda1(lamb)*priorIm;
-                    y = cat(1,y,temp);
-
+    %                      Code to find the next set of optimum alphas and
+    %                      concatenate the new patches in the y vector
+                    count = 0;
+                    for j=1:(H/patchSize)
+                        for k=1:(W/patchSize)
+                            dimH = (j-1)*patchSize + 1;
+                            dimW = (k-1)*patchSize + 1;
+%                             Extract the patch from the result till yet
+                            patch = reshape(result(dimH:dimH + patchSize - 1,dimW:dimW + patchSize - 1),[patchSize*patchSize 1]);
+                            patch = patch - meanTemplate;
+                            m = size(patch,1);
+                            n = numDims;
+%                             Solve for alphas for every patch
+                            
+                            disp "-------------PatchCount---------------------";
+                            count
+                            disp "--------------------------------------------";
+                            
+                            [x_hat,status,history]=l1_ls_modified(Afun2,Atfun2,m,n,patch,la3/la2,rel_tol);                    
+                            newPatch=(eigenVecs*x_hat(:)) + meanTemplate;
+%                             Append into the y yector so as to solve for
+%                             thetas later
+                            y = cat(1,y,(la2/numPatches)*newPatch);
+                            count = count + 1;
+                        end
+                    end
                 end                         
 
+                
                 m = size(y,1);
                 n = size(xArray,1);         
-
-                [x_hat,status,history]=l1_ls_modified(Afun,Atfun,m,n,y,lambda(la),rel_tol);
-
+    %             Solve for theta given the eigencoefficients of the patches
+                [x_hat,status,history]=l1_ls_modified(Afun,Atfun,m,n,y,lambda1,rel_tol);
 
                 startPt = 1;
                 endPt = size(x_hat,1);
                 xp = x_hat(startPt:endPt);
 
                 output = reshape(xp, [dim(1) dim(2)]);
+    %             Take the IDCT to get the image from the theta
                 output = idct2(output);          
 
             end
-
-                in = input;
+		in = input;
+		out = output;
+                Nmr = (out-in).^2;
+    %                 Dnr = in-mean2(in).^2;
+                mseVal(ang,lambda2,lambda3) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
+ 
                 in = in - minimum;
                 in = in./maximum;
-            
-                out = output;
+
                 out = out - minimum;
                 out = out./maximum;
 
 
-                outfileName = sprintf('%s/%d_angles_mPICCS_lambda1_%d_lamb_%d',folderName,numAngles,lamb,la); 
+                outfileName = sprintf('%s/%d_angles_PatchBasedPCA_lambda2_%d_lambda3_%d',folderName,numAngles,la2,la3); 
                 imwrite(out,outfileName,'png');
 
-                Nmr = (out-in).^2;
-%                 Dnr = in-mean2(in).^2;
-                mseVal(ang,lamb) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
-%                 mseVal(ang,lamb) = sum(Nmr(:))/sum(Dnr(:)); % computing relative MSE value.
-
-                outCropped = out(1:60,:);
-                inCropped = in(1:60,:);
-                Nmr = (outCropped-inCropped).^2;
-%                 Dnr = inCropped-mean2(inCropped).^2;
-                mseValCropped(ang,lamb) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
-%                 mseValCropped(ang,lamb) = sum(Nmr(:))/sum(Dnr(:)); % computing relative MSE value.
-
-
-
-
-
-      %----------------------------------------------      
+    %                 mseVal(ang,lamb) = sum(Nmr(:))/sum(Dnr(:)); % computing relative MSE value.
+          %----------------------------------------------      
         end
-    end  
-end 
+    end 
+end
 toc;
+
+save('errors','mseVal');
 
 % for lamb = 1:length(lambda1)
 %     mse05 = [mseValCropped_CS(1),mseValCropped_PICCS(1,lamb),mseValCropped(1,lamb)];  

@@ -1,3 +1,3 @@
-function b = AtRadon6(patch, dictionary)
-%% For a particular Patch
-b = dictionary' * patch;
+function b = AtRadon6(patch, eigenVecs)
+%% For a particular Patch, Get the Alphas
+b = eigenVecs' * patch;

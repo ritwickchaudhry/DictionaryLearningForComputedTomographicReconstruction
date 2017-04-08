@@ -1,8 +1,9 @@
 function b = AtRadon5(b_data,idx,dim,patchSize, numAngles,lambda2)
-
 %% Split the Column into the components
-
-s1 = size(b_data,1)-(dim(1)*dim(2));
+H = dim(1);
+W = dim(2);
+numPatches = ((H*W)/(patchSize*patchSize));
+s1 = size(b_data,1)-(numPatches*(patchSize^2));
 s2 = size(b_data,1);
 
 startPt = 1;
@@ -27,23 +28,26 @@ image = backProjImg;
 
 counter = 0;
 
-numPatches = dim(1)*dim(2)/patchSize*patchSize;
 H = dim(1);
 W = dim(2);
+
+numPatches = ((H*W)/(patchSize*patchSize));
+
 for j=1:(H/patchSize)
     for k=1:(W/patchSize)
-        dimH = (j-1)*patchSize + 1;
-        dimW = (k-1)*patchSize + 1;
+	dimH = (j-1)*patchSize + 1;
+	dimW = (k-1)*patchSize + 1;
         patchStart = (counter*patchSize*patchSize) + 1;
-        patchEnd = patchStart + (patchSize*patchSize);
+        patchEnd = patchStart + (patchSize*patchSize) - 1;
         patch = Y2(patchStart:patchEnd);
         patch = ((lambda2/numPatches)^2) * patch;
+        patch = reshape(patch,[patchSize patchSize]);
         image(dimH:dimH+patchSize-1,dimW:dimW+patchSize-1) = image(dimH:dimH+patchSize-1,dimW:dimW+patchSize-1)+patch;
-        counter = counter+1;
+        counter = counter + 1;
     end
 end
 
 % -------------- Final Image Obtained
 
-% Collectively Take DCT of the sum
-b = dct2(image);
+% Collectively Take DCT of the sum to get theta
+b = reshape(dct2(image),[dim(1)*dim(2) 1]);
