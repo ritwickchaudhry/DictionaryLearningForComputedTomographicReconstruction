@@ -5,8 +5,8 @@ close all;
 
 es = load('EigenSpaceBrain.mat');
 eigenVecs = es.eigenVecs;
-eigenVals = es.eigenVals;
-numDim = length(eigenVals);
+% eigenVals = es.eigenVals;
+numDim = size(eigenVecs,2);
 meanTemplate = es.meanTemplate;
 minimum = es.minimum;
 maximum = es.maximum;
@@ -96,7 +96,8 @@ for la = 1:length(lambda)
 
         size(FBPresult);
         size(input);
-        
+
+        in = input;
         Nmr = (FBPresult-in).^2;
         mseVal_FBP(ang) = sqrt(sum(Nmr(:)/length(Nmr(:)))); % computing relative MSE value.
         
@@ -106,7 +107,6 @@ for la = 1:length(lambda)
         outfileName = sprintf('%s/%d_angles_FBPresult',folderName,numAngles); 
         imwrite(FBPresult,outfileName,'png');   
         figure;imshow(FBPresult,[]);
-        in = input;
         
 %         in = in - minimum;
 %         in = in./maximum;
