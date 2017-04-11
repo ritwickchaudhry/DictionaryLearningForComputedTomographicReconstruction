@@ -3,10 +3,10 @@ close all;
 
 % Load the Eigen Space information learned from the templates.
 
-parameters = load('Dictionary.mat');
+parameters = load('dictionary.mat');
 dictionary = parameters.dict;
 numDims = size(dictionary,2);
-%meanTemplate = es.meanPatch;
+meanTemplate = es.meanPatch;
 patchSize = parameters.patchSize;
 minimum = dict.minimum;
 maximum = dict.maximum;
@@ -68,17 +68,17 @@ for ang = 1:length(angleSet)
             Afun = @(z) ARadon5(z,idx1,dim,patchSize,numAngles,la2);
             Atfun = @(z) AtRadon5(z,idx1,dim,patchSize,numAngles,la2);
 
-            Afun2 = @(z) ARadon6(z,eigenVecs);
-            Atfun2 = @(z) AtRadon6(z,eigenVecs);
+            Afun2 = @(z) ARadon6(z,dict);
+            Atfun2 = @(z) AtRadon6(z,dict);
 
             H = dim(1);
             W = dim(2);
             numPatches = ((H*W)/(patchSize*patchSize))
             
             for numIter = 1:numCycles         
-                disp "---------------------------------------";
+                disp '---------------------------------------';
                 numIter
-                disp "---------------------------------------";
+                disp '---------------------------------------';
                 if numIter==1
                     startPt = 1;
                     endPt = dim(1)*dim(2);
@@ -88,16 +88,17 @@ for ang = 1:length(angleSet)
                     startPt = 1;
                     endPt = numAngles;
                     angles = idx1(startPt:endPt);
-                    radProj = radon(X,angles);    
-                    y = reshape(radProj,[size(radProj,1)*size(radProj,2) 1]); 
+                    radProj = radon(X,angles); 
+
     %                     Actual Measurements - y
+                    y = reshape(radProj,[size(radProj,1)*size(radProj,2) 1]); 
     %                     Zero Alphas For all patches (That's why just mean template)                
 %                     disp Here1
                     vec = (la2/numPatches)*meanTemplate;
                     vec = repmat(vec,numPatches,1);
 %                     size(vec)
                     y = cat(1,y,vec);
-                    size(y)
+                    size(y);
 %                     disp Here2
 
                 else
@@ -129,14 +130,14 @@ for ang = 1:length(angleSet)
                             patch = patch - meanTemplate;
                             m = size(patch,1);
                             n = numDims;
-%                             Solve for alphas for every patch
                             
-                            disp "-------------PatchCount---------------------";
+                            disp '-------------PatchCount---------------------';
                             count
-                            disp "--------------------------------------------";
+                            disp '--------------------------------------------';
                             
-                            [x_hat,status,history]=l1_ls_modified(Afun2,Atfun2,m,n,patch,la3/la2,rel_tol);                    
-                            newPatch=(eigenVecs*x_hat(:)) + meanTemplate;
+%                             Solve for alphas for every patch
+                            [x_hat,status,history]=l1_ls_modified(Afun2,Atfun2,m,n,patch,la3/la2,rel_tol);
+                            newPatch=(dict*x_hat(:)) + meanTemplate;
 %                             Append into the y yector so as to solve for
 %                             thetas later
                             y = cat(1,y,(la2/numPatches)*newPatch);
@@ -160,21 +161,21 @@ for ang = 1:length(angleSet)
                 output = idct2(output);          
 
             end
-		in = input;
-		out = output;
-                Nmr = (out-in).^2;
-    %                 Dnr = in-mean2(in).^2;
-                mseVal(ang,lambda2,lambda3) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
- 
-                in = in - minimum;
-                in = in./maximum;
+			in = input;
+			out = output;
+	        Nmr = (out-in).^2;
+	%                 Dnr = in-mean2(in).^2;
+	        mseVal(ang,lambda2,lambda3) = sqrt(sum(Nmr(:))/length(Nmr(:))); % computing relative MSE value.
 
-                out = out - minimum;
-                out = out./maximum;
+	        in = in - minimum;
+	        in = in./maximum;
+
+	        out = out - minimum;
+	        out = out./maximum;
 
 
-                outfileName = sprintf('%s/%d_angles_PatchBasedPCA_lambda2_%d_lambda3_%d',folderName,numAngles,la2,la3); 
-                imwrite(out,outfileName,'png');
+	        outfileName = sprintf('%s/%d_angles_PatchBasedPCA_lambda2_%d_lambda3_%d',folderName,numAngles,la2,la3); 
+	        imwrite(out,outfileName,'png');
 
     %                 mseVal(ang,lamb) = sum(Nmr(:))/sum(Dnr(:)); % computing relative MSE value.
           %----------------------------------------------      

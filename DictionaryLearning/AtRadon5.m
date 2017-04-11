@@ -37,13 +37,13 @@ for j=1:(H/patchSize)
     for k=1:(W/patchSize)
 	dimH = (j-1)*patchSize + 1;
 	dimW = (k-1)*patchSize + 1;
-        patchStart = (counter*patchSize*patchSize) + 1;
-        patchEnd = patchStart + (patchSize*patchSize) - 1;
-        patch = Y2(patchStart:patchEnd);
-        patch = ((lambda2/numPatches)^2) * patch;
-        patch = reshape(patch,[patchSize patchSize]);
-        image(dimH:dimH+patchSize-1,dimW:dimW+patchSize-1) = image(dimH:dimH+patchSize-1,dimW:dimW+patchSize-1)+patch;
-        counter = counter + 1;
+    patchStart = (counter*patchSize*patchSize) + 1;
+    patchEnd = patchStart + (patchSize*patchSize) - 1;
+    patch = Y2(patchStart:patchEnd);
+    patch = ((lambda2/numPatches)) * patch;
+    patch = reshape(patch,[patchSize patchSize]);
+    image(dimH:dimH+patchSize-1,dimW:dimW+patchSize-1) = image(dimH:dimH+patchSize-1,dimW:dimW+patchSize-1)+patch;
+    counter = counter + 1;
     end
 end
 

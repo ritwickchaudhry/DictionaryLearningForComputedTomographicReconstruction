@@ -31,6 +31,11 @@ for i = 3:numTemplates
     end
 end
 
+meanPatch = mean(dataSet,2);
+
+% Mean Centre the dataset
+dataSet = dataSet - repmat(meanPatch, ones(1, size(dataSet,2)));
+
 % Dataset of Patches Created
 % Call to K-SVD
 
@@ -38,6 +43,6 @@ params = struct('K',200,'numIteration',1,'errorFlag',1,'preserveDCAtom',1, 'Init
 
 [dict, output] = KSVD(dataSet,params);
 
-save('dictionary','dict','minimum','maximum','patchSize');
+save('dictionary','dict','meanPatch','minimum','maximum','patchSize');
 
 
