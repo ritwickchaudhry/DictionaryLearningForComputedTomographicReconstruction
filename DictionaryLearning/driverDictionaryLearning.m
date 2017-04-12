@@ -4,12 +4,12 @@ close all;
 % Load the Eigen Space information learned from the templates.
 
 parameters = load('dictionary.mat');
-dictionary = parameters.dict;
-numDims = size(dictionary,2);
-meanTemplate = es.meanPatch;
+dict = parameters.dict;
+numDims = size(dict,2);
+meanTemplate = parameters.meanPatch;
 patchSize = parameters.patchSize;
-minimum = dict.minimum;
-maximum = dict.maximum;
+minimum = parameters.minimum;
+maximum = parameters.maximum;
 % minimum = es.minimum;
 % maximum = es.maximum;
 folderName = 'testDictionaryBasedPrior';

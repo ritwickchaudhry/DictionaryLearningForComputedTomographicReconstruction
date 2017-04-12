@@ -1,3 +1,4 @@
+addpath('./KSVD_Matlab_ToolBox');
 templateDirectory = './TrainImages/';
 dirInfo = dir(templateDirectory);
 numTemplates = length(dirInfo) - 2;
@@ -34,7 +35,9 @@ end
 meanPatch = mean(dataSet,2);
 
 % Mean Centre the dataset
-dataSet = dataSet - repmat(meanPatch, ones(1, size(dataSet,2)));
+% size(repmat(meanPatch, [1,size(dataSet,2)]))
+% size(dataSet)
+dataSet = dataSet - repmat(meanPatch, [1, size(dataSet,2)]);
 
 % Dataset of Patches Created
 % Call to K-SVD
@@ -44,5 +47,3 @@ params = struct('K',200,'numIteration',1,'errorFlag',1,'preserveDCAtom',1, 'Init
 [dict, output] = KSVD(dataSet,params);
 
 save('dictionary','dict','meanPatch','minimum','maximum','patchSize');
-
-

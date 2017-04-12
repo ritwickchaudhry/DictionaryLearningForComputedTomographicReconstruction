@@ -136,7 +136,7 @@ for ang = 1:length(angleSet)
                             count
                             disp "--------------------------------------------";
                             
-                            [x_hat,status,history]=l1_ls_modified(Afun2,Atfun2,m,n,patch,la3/la2,rel_tol);                    
+                            [x_hat,status,history]=l1_ls_modified(Afun2,Atfun2,m,n,patch,la3/la2,rel_tol,'quiet');                    
                             newPatch=(eigenVecs*x_hat(:)) + meanTemplate;
 %                             Append into the y yector so as to solve for
 %                             thetas later
