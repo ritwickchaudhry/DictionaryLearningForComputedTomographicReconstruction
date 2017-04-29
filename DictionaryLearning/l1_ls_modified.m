@@ -67,7 +67,7 @@ MAX_NT_ITER     = 300;      % maximum IPM (Newton) iteration
 % LINE SEARCH PARAMETERS
 ALPHA           = 0.01;     % minimum fraction of decrease in the objective
 BETA            = 0.5;      % stepsize decrease factor
-MAX_LS_ITER     = 300;      % maximum backtracking line search iteration
+MAX_LS_ITER     = 500;      % maximum backtracking line search iteration
 
 % VARIABLE ARGUMENT HANDLING
 % if the second argument is a matrix or an operator, the calling sequence is
@@ -96,7 +96,7 @@ MAX_LS_ITER     = 300;      % maximum backtracking line search iteration
 
 % VARIABLE ARGUMENT HANDLING
 t0         = min(max(1,1/lambda),2*n/1e-3);
-defaults   = {1e-3,false,1e-3,2000,zeros(n,1),ones(n,1),t0};
+defaults   = {1e-3,false,1e-3,500,zeros(n,1),ones(n,1),t0};
 given_args = ~cellfun('isempty',varargin);
 defaults(given_args) = varargin(given_args);
 [reltol,quiet,eta,pcgmaxi,x,u,t] = deal(defaults{:});
